@@ -1,0 +1,19 @@
+{
+  "name": "e-health-adviser",
+  "version": "1.0.0",
+  "description": "An AI-powered E-Health Symptom Advisor",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "build": "echo 'Building static site...'"
+  },
+  "keywords": [
+    "health",
+    "ai",
+    "advisor",
+    "static"
+  ],
+  "author": "",
+  "license": "ISC"
+}

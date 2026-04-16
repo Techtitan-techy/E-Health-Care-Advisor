@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Healthcare Advisor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Emergency Overlay -->
+    <div id="emergency-overlay" class="emergency-overlay hidden">
+        <div class="emergency-content">
+            <h1>⚠️ EMERGENCY ALERT</h1>
+            <p id="emergency-message">Critical symptoms detected. Seek immediate medical attention!</p>
+            <button class="emergency-btn" onclick="app.dismissEmergency()">DISMISS</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🏥 E-Healthcare Advisor</h1>
+                <p class="disclaimer">⚠️ Educational Simulation - Not a Replacement for Professional Medical Advice</p>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="nav-btn" data-tab="diagnosis">Diagnosis</button>
+            <button class="nav-btn" data-tab="profile">Profile</button>
+            <button class="nav-btn" data-tab="health-pulse">Health Pulse</button>
+            <button class="nav-btn" data-tab="reports">Reports</button>
+            <button class="nav-btn" data-tab="hospitals">Hospitals</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-pane active">
+                <h2>Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>👤 Patient Status</h3>
+                        <p id="patient-status">No profile created yet</p>
+                        <button class="btn-small" onclick="app.switchTab('profile')">Create Profile</button>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>📊 Last Diagnosis</h3>
+                        <p id="last-diagnosis">No diagnosis yet</p>
+                        <button class="btn-small" onclick="app.switchTab('diagnosis')">Start Diagnosis</button>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>💚 Health Score</h3>
+                        <p id="health-score" class="health-score">--</p>
+                        <small id="health-status">No data available</small>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>📈 Recent Activity</h3>
+                        <ul id="activity-list" class="activity-list">
+                            <li>No activity yet</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Diagnosis Tab -->
+            <section id="diagnosis" class="tab-pane">
+                <h2>Symptom Diagnosis</h2>
+                <div class="diagnosis-container">
+                    <div class="symptoms-selection">
+                        <h3>📝 Describe How You're Feeling</h3>
+                        <p class="sub-text">Tell us about your symptoms in your own words:</p>
+                        <textarea id="symptom-description" class="symptom-description" placeholder="Example: I have a terrible headache, I feel nauseous and the light is bothering my eyes. I'm also very tired..."></textarea>
+                        <button class="btn-secondary" onclick="app.parseSymptomDescription()">Analyze Description</button>
+
+                        <div style="margin: 2rem 0; padding: 1.5rem 0; border-top: 2px solid #e5e7eb; border-bottom: 2px solid #e5e7eb;">
+                            <h3>Or Select Symptoms Manually</h3>
+                            <p class="sub-text">Check all that apply:</p>
+                            <div id="symptoms-grid" class="symptoms-grid"></div>
+                        </div>
+
+                        <button class="btn-primary" onclick="app.runDiagnosis()">🔍 Analyze Symptoms</button>
+                    </div>
+                    <div id="diagnosis-results" class="diagnosis-results hidden">
+                        <h3>Diagnosis Results</h3>
+                        <div id="results-content"></div>
+                        <button class="btn-secondary" onclick="app.resetDiagnosis()">Clear & Start Over</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Tab -->
+            <section id="profile" class="tab-pane">
+                <h2>Patient Profile</h2>
+                <div class="profile-container">
+                    <form id="profile-form" class="profile-form">
+                        <div class="form-group">
+                            <label for="patient-name">Full Name *</label>
+                            <input type="text" id="patient-name" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="patient-age">Age *</label>
+                                <input type="number" id="patient-age" min="0" max="120" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="patient-gender">Gender</label>
+                                <select id="patient-gender">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-conditions">Existing Conditions</label>
+                            <textarea id="patient-conditions" rows="3" placeholder="e.g., Diabetes, Hypertension..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-allergies">Allergies</label>
+                            <textarea id="patient-allergies" rows="3" placeholder="e.g., Penicillin, Peanuts..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="patient-medications">Current Medications</label>
+                            <textarea id="patient-medications" rows="3" placeholder="List current medications..."></textarea>
+                        </div>
+                        <button type="button" class="btn-primary" onclick="app.saveProfile()">Save Profile</button>
+                        <button type="button" class="btn-danger" onclick="app.deleteProfile()" id="delete-profile-btn" style="display:none;">Delete Profile</button>
+                    </form>
+                    <div id="profile-display" class="profile-display hidden">
+                        <h3>Current Profile</h3>
+                        <div id="profile-info"></div>
+                        <button class="btn-secondary" onclick="app.editProfile()">Edit Profile</button>
+                    </div>
+
+                    <div class="data-management">
+                        <h3>📊 Data Management</h3>
+                        <p class="sub-text">Export or import your health data for backup and sharing.</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <button class="btn-secondary" onclick="DataExportManager.exportData()">📥 Export Data</button>
+                            <label class="btn-secondary" style="cursor: pointer; margin: 0;">
+                                📤 Import Data
+                                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="DataExportManager.importData(this)">
+                            </label>
+                        </div>
+                        <p class="sub-text" style="margin-top: 1rem; font-size: 0.85rem; color: #ef4444;">
+                            ⚠️ Disclaimer: This app is for educational purposes only and should not replace professional medical advice.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Health Pulse Tab -->
+            <section id="health-pulse" class="tab-pane">
+                <h2>Health Pulse - Wellness Tracker</h2>
+                <div class="health-pulse-container">
+                    <div class="wellness-input">
+                        <h3>Log Daily Wellness</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mood-input">Mood (1-10)</label>
+                                <input type="range" id="mood-input" min="1" max="10" value="5">
+                                <span id="mood-value">5</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="energy-input">Energy Level (1-10)</label>
+                                <input type="range" id="energy-input" min="1" max="10" value="5">
+                                <span id="energy-value">5</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sleep-input">Sleep Hours (0-12)</label>
+                                <input type="number" id="sleep-input" min="0" max="12" step="0.5" value="7">
+                            </div>
+                            <div class="form-group">
+                                <label for="stress-input">Stress Level (1-10)</label>
+                                <input type="range" id="stress-input" min="1" max="10" value="5">
+                                <span id="stress-value">5</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary" onclick="app.logWellness()">Log Entry</button>
+                    </div>
+                    <div class="wellness-chart">
+                        <h3>Wellness Trends (Last 7 Days)</h3>
+                        <canvas id="wellness-canvas"></canvas>
+                        <p id="no-wellness-data" class="sub-text">No wellness data logged yet</p>
+                    </div>
+                    <div id="wellness-history" class="wellness-history">
+                        <h3>Wellness History</h3>
+                        <div id="wellness-entries"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reports" class="tab-pane">
+                <h2>Diagnosis Reports</h2>
+                <div class="reports-container">
+                    <div class="reports-filter">
+                        <input type="text" id="report-search" placeholder="Search reports by disease...">
+                        <select id="severity-filter">
+                            <option value="">All Severities</option>
+                            <option value="low">Low</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div id="reports-list" class="reports-list">
+                        <p class="sub-text">No reports yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hospitals Tab -->
+            <section id="hospitals" class="tab-pane">
+                <h2>Nearby Hospitals & Clinics</h2>
+                <div class="hospitals-container">
+                    <div class="hospitals-filter">
+                        <input type="text" id="hospital-search" placeholder="Search hospitals...">
+                        <label>
+                            <input type="checkbox" id="emergency-filter">
+                            Emergency Only
+                        </label>
+                    </div>
+                    <div id="hospitals-list" class="hospitals-list"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 E-Healthcare Advisor. Educational Simulation Only.</p>
+            <p>Always consult with healthcare professionals for medical advice.</p>
+        </footer>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
