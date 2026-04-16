@@ -1,53 +1,52 @@
-export default async function middleware(request) {
-  const url = new URL(request.url);
-  
-  // Prepare the data for abuse detection
-  const payload = {
-    user_id: request.headers.get('x-user-id') || 'unauthenticated',
-    ip: request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
-    endpoint: url.pathname,
-    method: request.method,
-    user_agent: request.headers.get('user-agent') || '',
-    timestamp: Date.now() / 1000,
-  };
+import { NextResponse } from 'next/server';
 
+// Your Google Cloud Run API Gateway URL
+const GATEWAY_ANALYZE_URL = "https://api-gateway-385749714263.asia-south1.run.app/analyze";
+
+export async function middleware(request) {
   try {
-    // Call the API Abuse Detection service on Render
-    const detectionUrl = 'https://api-abuse-detection.onrender.com/detect'; 
-    const response = await fetch(detectionUrl, {
+    const ip = request.ip || request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || 'unknown';
+    
+    // 1. Ask your Cloud Run Gateway to analyze the visitor
+    const analyzeRequest = await fetch(GATEWAY_ANALYZE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      // Standard fetch timeout isn't directly supported in Edge, 
-      // but Vercel Edge has a short execution limit anyway.
+      body: JSON.stringify({
+        user_id: ip, 
+        ip: ip,
+        endpoint: request.nextUrl.pathname,
+        method: request.method,
+        user_agent: request.headers.get('user-agent') || ''
+      })
     });
 
-    if (response.ok) {
-      const result = await response.json();
-      
-      // If the service decides to block the request
-      if (result.action === 'block') {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Security Block', 
-            reason: result.reason || 'Malicious activity detected',
-            incident_id: result.details?.id 
-          }),
-          { 
-            status: 403, 
-            headers: { 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-    }
-  } catch (err) {
-    // Fail open: if the security service is down, don't break the website
-    console.warn('Security layer unreachable, failing open:', err);
-  }
+    const decision = await analyzeRequest.json();
 
-  // Allow the request to proceed
-  return;
+    // 2. Read the Gateway's verdict
+    if (decision.action === 'block') {
+      return new NextResponse("<h2>Access Denied</h2><p>Our AI Security system detected malicious behavior.</p>", { 
+        status: 403, 
+        headers: { 'content-type': 'text/html' } 
+      });
+    }
+
+    if (decision.action === 'rate_limit') {
+      return new NextResponse("<h2>Too Many Requests</h2><p>Please slow down.</p>", { 
+        status: 429, 
+        headers: { 'content-type': 'text/html' } 
+      });
+    }
+
+    // 3. Traffic is clean, load the website normally!
+    return NextResponse.next();
+    
+  } catch (error) {
+    // If the Gateway fails for any reason, let the user in (fail-safe)
+    return NextResponse.next();
+  }
 }
 
-// Ensure this only runs on specific routes if needed
-// For now, it will protect everything
+// Ensure the middleware runs on all pages and API routes
+export const config = {
+  matcher: '/:path*',
+};

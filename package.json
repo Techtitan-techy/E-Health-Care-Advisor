@@ -14,5 +14,8 @@
     "static"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "next": "^16.2.4"
+  }
 }
