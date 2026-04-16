@@ -47,7 +47,16 @@ export default async function middleware(request) {
   }
 }
 
-// Ensure the middleware runs on all pages
+// Ensure the middleware runs on application pages and APIs, but ignores static files
 export const config = {
-  matcher: '/:path*',
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - any file with an extension like .css, .js, .png, .jpg, etc.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js)$).*)',
+  ],
 };
