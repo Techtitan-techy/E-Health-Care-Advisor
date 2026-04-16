@@ -5,8 +5,7 @@
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",
-    "dev": "npx serve .",
-    "build": "echo 'Building static site...'"
+    "dev": "npx serve ."
   },
   "keywords": [
     "health",
