@@ -2,9 +2,6 @@
   "version": 2,
   "name": "e-health-adviser",
   "cleanUrls": true,
-  "framework": null,
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/(.*)",
