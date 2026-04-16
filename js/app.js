@@ -1,3 +1,55 @@
+// API Abuse Detection - Security Layer
+class SecurityLayer {
+    static async validateAction(actionName, dataText) {
+        try {
+            const profileStr = localStorage.getItem('patientProfile');
+            const username = profileStr ? JSON.parse(profileStr).name : "anonymous";
+            
+            // Build the payload expected by your Render ML detector
+            const payload = {
+                user_id: username,
+                ip: "127.0.0.1", // DOM cannot get real IP, fallback used
+                endpoint: "/" + actionName,
+                method: "POST",
+                body: dataText,
+                user_agent: navigator.userAgent,
+                timestamp: Date.now() / 1000
+            };
+
+            const response = await fetch("https://api-abuse-detection.onrender.com/detect", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) return true; // Fail open if API is offline
+
+            const result = await response.json();
+            
+            if (result.action === 'block') {
+                this.showBlockOverlay(result.reason);
+                return false;
+            }
+            return true;
+        } catch (e) {
+            console.warn("Security layer bypass due to network error:", e);
+            return true; // Fail open
+        }
+    }
+
+    static showBlockOverlay(reason) {
+        // Create emergency blocking overlay
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#fee2e2; color:#991b1b; font-family:'Outfit', sans-serif; text-align:center;">
+                <h1 style="font-size:3rem; margin-bottom:1rem;">🚫 SECURITY BLOCK</h1>
+                <p style="font-size:1.2rem;">Our AI security layer has identified malicious or abusive activity.</p>
+                <p style="margin-top:1rem; padding: 1rem; background: rgba(153, 27, 27, 0.1); border-radius: 8px;"><b>Reason:</b> ${reason.replace(/_/g, " ").toUpperCase()}</p>
+                <button onclick="location.reload()" style="margin-top:2rem; padding:0.75rem 1.5rem; background:#991b1b; color:white; border:none; border-radius:4px; font-size: 1rem; cursor:pointer;">Reload Page</button>
+            </div>
+        `;
+    }
+}
+
 // Simple Chart.js-like implementation for wellness tracking
 class SimpleChart {
     constructor(canvasId, data) {
@@ -473,8 +525,15 @@ const app = {
     },
 
     // Parse symptom description with better error handling
-    parseSymptomDescription() {
-        const description = document.getElementById('symptom-description').value.toLowerCase().trim();
+    async parseSymptomDescription() {
+        const descriptionRaw = document.getElementById('symptom-description').value;
+        
+        // --- API Abuse Security Check ---
+        const isSafe = await SecurityLayer.validateAction('parseSymptom', descriptionRaw);
+        if (!isSafe) return;
+        // --------------------------------
+
+        const description = descriptionRaw.toLowerCase().trim();
 
         if (!description) {
             NotificationManager.warning('⚠ Please describe how you\'re feeling');
@@ -795,8 +854,16 @@ const app = {
     },
 
     // Save profile with validation
-    saveProfile() {
-        const name = document.getElementById('patient-name').value.trim();
+    async saveProfile() {
+        const nameRaw = document.getElementById('patient-name').value;
+        const conditionsRaw = document.getElementById('patient-conditions').value;
+        
+        // --- API Abuse Security Check ---
+        const isSafe = await SecurityLayer.validateAction('saveProfile', nameRaw + " " + conditionsRaw);
+        if (!isSafe) return;
+        // --------------------------------
+
+        const name = nameRaw.trim();
         const age = document.getElementById('patient-age').value.trim();
 
         // Validation
