@@ -4,15 +4,29 @@ const GATEWAY_ANALYZE_URL = "https://api-gateway-385749714263.asia-south1.run.ap
 export default async function middleware(request) {
   try {
     const url = new URL(request.url);
-    
-    // Explicitly bypass for Loader.io verification tokens
-    if (url.pathname.includes('loaderio-')) {
-      return; 
+    const pathname = url.pathname;
+
+    // Direct bypass and serving for Loader.io verification tokens
+    if (pathname.includes('loaderio-')) {
+      // Extract the token part from the filename
+      const token = pathname.split('/').pop().split('.')[0];
+      return new Response(token, { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        } 
+      });
     }
 
     // Vercel provides the client IP in the headers or request object
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
     
+    // Ignore static assets for security analysis
+    if (pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|css|js|txt|ico)$/)) {
+      return;
+    }
+
     // 1. Ask your Cloud Run Gateway to analyze the visitor
     const analyzeRequest = await fetch(GATEWAY_ANALYZE_URL, {
       method: 'POST',
@@ -60,16 +74,7 @@ export default async function middleware(request) {
   }
 }
 
-// Ensure the middleware runs on application pages and APIs, but ignores static files
+// Ensure the middleware runs on application pages and APIs
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - any file with an extension like .css, .js, .png, .jpg, etc.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|txt)$).*)',
-  ],
+  matcher: '/:path*',
 };
