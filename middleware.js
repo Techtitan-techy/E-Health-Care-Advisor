@@ -4,15 +4,15 @@ const GATEWAY_ANALYZE_URL = "https://api-gateway-385749714263.asia-south1.run.ap
 export default async function middleware(request) {
   try {
     const url = new URL(request.url);
-    const pathname = url.pathname;
-    const userAgent = request.headers.get('user-agent') || '';
+    const pathname = url.pathname.toLowerCase();
+    const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
 
-    // Direct bypass and serving for Loader.io verification tokens
-    if (pathname.includes('loaderio-') || userAgent.toLowerCase().includes('loaderio')) {
-      // If it's the specific file path, serve the token directly
-      if (pathname.includes('loaderio-')) {
-        const token = "loaderio-8ebb1aaefdde594ff4ff07cddc91775b"; 
-        return new Response(token, { 
+    // 1. ABSOLUTE BYPASS for Loader.io verification tokens and bot traffic
+    // This MUST happen before any external calls or logic to prevent 429s during verification
+    if (pathname.includes('loaderio-') || userAgent.includes('loaderio')) {
+      // Serve the verification token directly if the path matches the pattern
+      if (pathname.includes('loaderio-8ebb1aaefdde594ff4ff07cddc91775b')) {
+        return new Response("loaderio-8ebb1aaefdde594ff4ff07cddc91775b", { 
           status: 200, 
           headers: { 
             'Content-Type': 'text/plain',
@@ -20,7 +20,7 @@ export default async function middleware(request) {
           } 
         });
       }
-      // If it's just the user agent (loaderio bot), allow them through to any page they are testing
+      // For any other loaderio bot requests (e.g. testing the home page), allow them through
       return; 
     }
 
