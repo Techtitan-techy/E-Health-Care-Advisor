@@ -20,6 +20,13 @@ export default async function middleware(request) {
       })
     });
 
+    // Fail-safe: If the gateway itself errors or rate-limits the middleware call,
+    // allow the user through rather than blocking legitimate traffic
+    if (!analyzeRequest.ok) {
+      console.warn(`Gateway returned ${analyzeRequest.status}, failing open`);
+      return; // allow the request
+    }
+
     const decision = await analyzeRequest.json();
 
     // 2. Read the Gateway's verdict
