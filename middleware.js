@@ -5,18 +5,23 @@ export default async function middleware(request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
+    const userAgent = request.headers.get('user-agent') || '';
 
     // Direct bypass and serving for Loader.io verification tokens
-    if (pathname.includes('loaderio-')) {
-      // Extract the token part from the filename
-      const token = pathname.split('/').pop().split('.')[0];
-      return new Response(token, { 
-        status: 200, 
-        headers: { 
-          'Content-Type': 'text/plain',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        } 
-      });
+    if (pathname.includes('loaderio-') || userAgent.toLowerCase().includes('loaderio')) {
+      // If it's the specific file path, serve the token directly
+      if (pathname.includes('loaderio-')) {
+        const token = "loaderio-8ebb1aaefdde594ff4ff07cddc91775b"; 
+        return new Response(token, { 
+          status: 200, 
+          headers: { 
+            'Content-Type': 'text/plain',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          } 
+        });
+      }
+      // If it's just the user agent (loaderio bot), allow them through to any page they are testing
+      return; 
     }
 
     // Vercel provides the client IP in the headers or request object
