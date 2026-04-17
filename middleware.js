@@ -4,6 +4,12 @@ const GATEWAY_ANALYZE_URL = "https://api-gateway-385749714263.asia-south1.run.ap
 export default async function middleware(request) {
   try {
     const url = new URL(request.url);
+    
+    // Explicitly bypass for Loader.io verification tokens
+    if (url.pathname.includes('loaderio-')) {
+      return; 
+    }
+
     // Vercel provides the client IP in the headers or request object
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
     
