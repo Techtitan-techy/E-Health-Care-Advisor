@@ -7,23 +7,6 @@ export default async function middleware(request) {
     const pathname = url.pathname.toLowerCase();
     const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
 
-    // 1. ABSOLUTE BYPASS for Loader.io verification tokens and bot traffic
-    // This MUST happen before any external calls or logic to prevent 429s during verification
-    if (pathname.includes('loaderio-') || userAgent.includes('loaderio')) {
-      // Serve the verification token directly if the path matches the pattern
-      if (pathname.includes('loaderio-8ebb1aaefdde594ff4ff07cddc91775b')) {
-        return new Response("loaderio-8ebb1aaefdde594ff4ff07cddc91775b", { 
-          status: 200, 
-          headers: { 
-            'Content-Type': 'text/plain',
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          } 
-        });
-      }
-      // For any other loaderio bot requests (e.g. testing the home page), allow them through
-      return; 
-    }
-
     // Vercel provides the client IP in the headers or request object
     const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
     
@@ -55,6 +38,7 @@ export default async function middleware(request) {
     const decision = await analyzeRequest.json();
 
     // 2. Read the Gateway's verdict
+
     if (decision.action === 'block') {
       return new Response("<h2>Access Denied</h2><p>Our AI Security system detected malicious behavior.</p>", { 
         status: 403, 

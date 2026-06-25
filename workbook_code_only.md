@@ -364,7 +364,7 @@ class DiagnosisAI {
 ```javascript
 const SymptomTextEngine = {
   synonyms: {
-    shortness_of_breath: ["breathless", "cant breathe", "difficulty breathing"],
+    shortness_of_breath: ["breathles s", "cant breathe", "difficulty breathing"],
     chest_pain: ["tight chest", "chest pressure", "heart pain"],
     fatigue: ["tired", "exhausted", "low energy"],
     slurred_speech: ["unclear speech", "cant talk properly"],
@@ -718,4 +718,40 @@ class DataBank {
         link.click();
     }
 }
+```
+
+### 5.3 Deployment & Cloud Infrastructure Configuration
+
+```json
+/* vercel.json - Edge Middleware & Routing */
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/gate/(.*)", "destination": "https://api-gateway-service.run.app/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+      ]
+    }
+  ]
+}
+```
+
+```javascript
+/* Continuous Deployment Strategy */
+const DeploymentSentinel = {
+  env: "production",
+  version: "v1.4.2-stable",
+  timestamp: new Date().toISOString(),
+  
+  checkHealth() {
+    console.log(`[DEPLOY] System active on ${this.env} at ${this.timestamp}`);
+    // Performance pulse for scaling & health checks
+  }
+};
 ```
